@@ -1,0 +1,32 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<h1>Usuarios de Microsoft 365 <span class="badge bg-secondary">@Model.Users.Count</span></h1>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else
+{
+    <table class="table table-striped table-sm">
+        <thead>
+            <tr><th>Nombre</th><th>Correo</th><th>UPN</th><th>Puesto</th><th>Habilitado</th></tr>
+        </thead>
+        <tbody>
+        @foreach (var u in Model.Users)
+        {
+            <tr>
+                <td>@u.DisplayName</td>
+                <td>@u.Mail</td>
+                <td>@u.UserPrincipalName</td>
+                <td>@u.JobTitle</td>
+                <td>@(u.AccountEnabled == true ? "Sí" : "No")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}

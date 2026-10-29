@@ -1,0 +1,75 @@
+@page
+@model SecureScoreModel
+@{
+    ViewData["Title"] = "Secure Score";
+}
+
+<h1>Microsoft Secure Score</h1>
+
+@if (Model.Error is not null)
+{
+    <div class="alert alert-danger">@Model.Error</div>
+}
+else if (Model.Latest is null)
+{
+    <div class="alert alert-warning">No hay datos de Secure Score para este tenant.</div>
+}
+else
+{
+    var s = Model.Latest;
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-center"><div class="card-body">
+                <div class="display-4">@Model.Percentage?.ToString("0.#")%</div>
+                <div>@s.CurrentScore?.ToString("0.##") de @s.MaxScore?.ToString("0.##") puntos</div>
+                <small class="text-muted">Actualizado: @s.CreatedDateTime?.LocalDateTime.ToString("g")</small>
+            </div></div>
+        </div>
+        <div class="col-md-8">
+            <p><strong>Usuarios activos:</strong> @s.ActiveUserCount &nbsp; <strong>Usuarios con licencia:</strong> @s.LicensedUserCount</p>
+            <p><strong>Servicios habilitados:</strong> @string.Join(", ", s.EnabledServices ?? [])</p>
+            @if (s.AverageComparativeScores?.Count > 0)
+            {
+                <table class="table table-sm w-auto">
+                    <thead><tr><th>Comparativa</th><th>Puntuación media</th></tr></thead>
+                    <tbody>
+                    @foreach (var c in s.AverageComparativeScores)
+                    {
+                        <tr><td>@c.Basis</td><td>@c.AverageScore?.ToString("0.##")</td></tr>
+                    }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+
+    <h2>Historial (últimos @Model.History.Count días)</h2>
+    <table class="table table-sm table-striped w-auto">
+        <thead><tr><th>Fecha</th><th>Puntuación</th><th>Máximo</th></tr></thead>
+        <tbody>
+        @foreach (var h in Model.History)
+        {
+            <tr><td>@h.CreatedDateTime?.LocalDateTime.ToString("d")</td><td>@h.CurrentScore?.ToString("0.##")</td><td>@h.MaxScore?.ToString("0.##")</td></tr>
+        }
+        </tbody>
+    </table>
+
+    <h2>Controles</h2>
+    <table class="table table-sm table-striped">
+        <thead><tr><th>Control</th><th>Categoría</th><th>Servicio</th><th>Puntos</th><th>Máx.</th><th>Estado</th></tr></thead>
+        <tbody>
+        @foreach (var c in (s.ControlScores ?? []).OrderBy(c => c.ControlCategory).ThenBy(c => c.ControlName))
+        {
+            Model.Profiles.TryGetValue(c.ControlName ?? "", out var p);
+            <tr>
+                <td>@(p?.Title ?? c.ControlName)</td>
+                <td>@c.ControlCategory</td>
+                <td>@p?.Service</td>
+                <td>@c.Score?.ToString("0.##")</td>
+                <td>@p?.MaxScore?.ToString("0.##")</td>
+                <td>@(c.Description ?? "")</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
